@@ -1,0 +1,23 @@
+from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Needed for session management
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['UPLOAD_FOLDER'] = 'static/profile_pics'
+
+db = SQLAlchemy(app)
+
+# User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(200))
+    profile_pic = db.Column(db.String(200))  # path to uploaded photo
+
+# Run this once to create the database
+with app.app_context():
+    db.create_all()

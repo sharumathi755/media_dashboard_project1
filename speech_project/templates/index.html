@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video & Audio Project</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #f9fafb, #f3f4f6);
+      color: #1f2937;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+      line-height: 1.6;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 40px;
+      color: #111827;
+    }
+
+    section {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      margin-top: 20px;
+    }
+
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      margin-top: 6px;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      outline: none;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background-color 0.3s ease, transform 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #4f46e5;
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      background-color: #a5b4fc;
+      cursor: not-allowed;
+    }
+
+    video,
+    iframe {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+      max-height: 400px;
+    }
+
+    #transcription {
+      background: #eef2ff;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #111827;
+      box-shadow: inset 0 0 8px rgba(99, 102, 241, 0.2);
+      min-height: 120px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login info and logout link -->
+  <div style="text-align: right; margin-bottom: 10px;">
+    Logged in as <strong>{{ name }}</strong> |
+    <a href="{{ url_for('logout') }}" style="color: #6366f1; text-decoration: none;">Logout</a>
+  </div>
+
+  <h1>🎥 Media Project Dashboard</h1>
+
+  <section>
+    <h2>📁 Upload Your Video</h2>
+    <label for="videoUpload">Choose a video file:</label>
+    <input type="file" id="videoUpload" accept="video/*" />
+    <video id="videoPlayer" controls></video>
+  </section>
+
+  <section>
+    <h2>▶️ Play YouTube Video</h2>
+    <label for="youtubeUrl">Paste YouTube URL:</label>
+    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" />
+    <button id="playYoutube"><i class="fas fa-play"></i> Play YouTube Video</button>
+    <div id="youtubePlayerContainer">
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </section>
+
+  <section>
+    <h2>🎙️ Audio Transcription</h2>
+    <button id="recordAudio"><i class="fas fa-microphone"></i> Start Recording</button>
+    <button id="stopAudio" disabled><i class="fas fa-stop"></i> Stop Recording</button>
+    <div id="transcription" aria-live="polite" aria-atomic="true"></div>
+  </section>
+
+  <script>
+    // Get YouTube Video ID
+    function getYouTubeID(url) {
+      const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|embed|shorts|watch)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    const videoPlayer = document.getElementById('videoPlayer');
+    const youtubePlayerContainer = document.getElementById('youtubePlayerContainer');
+    const videoUpload = document.getElementById('videoUpload');
+    const playYoutubeBtn = document.getElementById('playYoutube');
+    const youtubeUrlInput = document.getElementById('youtubeUrl');
+
+    videoUpload.onchange = () => {
+      const file = videoUpload.files[0];
+      if (file) {
+        youtubePlayerContainer.innerHTML = ''; // Clear YouTube player
+        videoPlayer.style.display = 'block';
+        const fileURL = URL.createObjectURL(file);
+        videoPlayer.src = fileURL;
+        videoPlayer.play();
+      }
+    };
+
+    playYoutubeBtn.onclick = () => {
+      const url = youtubeUrlInput.value.trim();
+      const videoId = getYouTubeID(url);
+
+      if (videoId) {
+        videoPlayer.style.display = 'none';
+        youtubePlayerContainer.innerHTML = '';
+
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}`;
+        iframe.frameBorder = '0';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+
+        youtubePlayerContainer.appendChild(iframe);
+      } else {
+        alert('Please enter a valid YouTube URL');
+      }
+    };
+
+    // Speech Recognition Setup
+    let recognition;
+    let isRecording = false;
+
+    const recordAudioBtn = document.getElementById('recordAudio');
+    const stopAudioBtn = document.getElementById('stopAudio');
+    const transcriptionDiv = document.getElementById('transcription');
+
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Sorry, your browser doesn't support Speech Recognition API. Try using Chrome.");
+    } else {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        transcriptionDiv.textContent = transcript;
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        recordAudioBtn.disabled = false;
+        stopAudioBtn.disabled = true;
+      };
+
+      recordAudioBtn.onclick = () => {
+        if (!isRecording) {
+          recognition.start();
+          isRecording = true;
+          recordAudioBtn.disabled = true;
+          stopAudioBtn.disabled = false;
+          transcriptionDiv.textContent = 'Listening...';
+        }
+      };
+
+      stopAudioBtn.onclick = () => {
+        if (isRecording) {
+          recognition.stop();
+        }
+      };
+    }
+  </script>
+
+</body>
+</html>
